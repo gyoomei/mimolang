@@ -5,128 +5,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MiMoLang — AI Language Tutor</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗣️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#02040a;--bg2:#0a0d16;--bg3:#12151f;--surface:#181c28;--surface2:#1e2336;--border:#252a3a;--text:#e4e7ef;--text2:#8b92a8;--accent:#6366f1;--accent2:#818cf8;--accent-glow:rgba(99,102,241,.15);--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;--radius:12px;--font:'Inter',system-ui,-apple-system,sans-serif}
-[data-theme="light"]{--bg:#f5f6fa;--bg2:#ebedf5;--bg3:#ffffff;--surface:#ffffff;--surface2:#f0f1f8;--border:#d5d8e8;--text:#1a1d2e;--text2:#6b7089;--accent-glow:rgba(99,102,241,.08)}
+:root{--bg:#02040a;--bg2:rgba(10,13,22,.85);--bg3:#12151f;--surface:rgba(24,28,40,.7);--surface2:rgba(30,35,54,.6);--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.1);--text:#e4e7ef;--text2:#8b92a8;--accent:#6366f1;--accent2:#818cf8;--accent3:#a5b4fc;--accent-glow:rgba(99,102,241,.12);--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--radius:14px;--font:'Outfit',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono','Fira Code',monospace;--grad:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7);--grad2:linear-gradient(135deg,#6366f1,#3b82f6);--shadow:0 8px 32px rgba(0,0,0,.3)}
+[data-theme="light"]{--bg:#f8f9fc;--bg2:rgba(248,249,252,.92);--bg3:#ffffff;--surface:rgba(255,255,255,.8);--surface2:rgba(240,241,248,.7);--border:rgba(0,0,0,.06);--border2:rgba(0,0,0,.1);--text:#1a1d2e;--text2:#6b7089;--accent-glow:rgba(99,102,241,.06);--shadow:0 8px 32px rgba(0,0,0,.08)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;position:relative}
 ::selection{background:var(--accent);color:#fff}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* Mesh Gradient BG */
+.mesh-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.mesh-bg .blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:.18;animation:drift 20s ease-in-out infinite}
+.mesh-bg .blob:nth-child(1){width:600px;height:600px;background:#6366f1;top:-10%;left:-5%;animation-delay:0s}
+.mesh-bg .blob:nth-child(2){width:500px;height:500px;background:#a855f7;top:40%;right:-8%;animation-delay:-7s}
+.mesh-bg .blob:nth-child(3){width:450px;height:450px;background:#3b82f6;bottom:-10%;left:30%;animation-delay:-14s}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
+[data-theme="light"] .mesh-bg .blob{opacity:.08}
+
+/* Particles */
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.particles span{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--accent);opacity:.3;animation:rise 12s linear infinite}
+.particles span:nth-child(1){left:10%;animation-delay:0s;animation-duration:10s}.particles span:nth-child(2){left:25%;animation-delay:-3s;width:2px;height:2px;opacity:.2}.particles span:nth-child(3){left:45%;animation-delay:-6s;animation-duration:14s}.particles span:nth-child(4){left:65%;animation-delay:-2s;width:4px;height:4px;opacity:.15;background:#a855f7}.particles span:nth-child(5){left:80%;animation-delay:-8s;animation-duration:11s}.particles span:nth-child(6){left:92%;animation-delay:-5s;width:2px;height:2px;opacity:.25;background:#3b82f6}
+@keyframes rise{0%{bottom:-10px;opacity:.3}50%{opacity:.15}100%{bottom:110vh;opacity:0}}
 
 /* Top Bar */
-.topbar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10;flex-shrink:0}
-.logo{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:8px}
-.logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.lang-select{display:flex;gap:4px;margin-left:12px}
-.lang-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:.8rem;font-weight:500;transition:all .2s}
-.lang-btn:hover,.lang-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 24px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10;flex-shrink:0;backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4)}
+.logo{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.02em}
+.logo span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800}
+.lang-select{display:flex;gap:3px;margin-left:12px}
+.lang-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:.75rem;font-weight:500;font-family:var(--font);transition:all .2s;letter-spacing:-.01em}
+.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
+.lang-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 12px rgba(99,102,241,.3)}
 .spacer{flex:1}
-.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .2s}
-.icon-btn:hover{background:var(--surface2);color:var(--text)}
+.icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all .2s}
+.icon-btn:hover{background:var(--accent-glow);color:var(--accent);border-color:rgba(99,102,241,.2)}
 .icon-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* Layout */
-.main{display:flex;flex:1;overflow:hidden}
+.main{display:flex;flex:1;overflow:hidden;position:relative;z-index:1}
 .chat-area{flex:1;display:flex;flex-direction:column;min-width:0}
-.sidebar{width:340px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar{width:340px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
 .sidebar.hidden{display:none}
 
 /* Mode Tabs */
-.mode-tabs{display:flex;gap:4px;padding:8px 20px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
-.mode-tab{padding:6px 16px;border-radius:8px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:.82rem;font-weight:500;transition:all .2s}
+.mode-tabs{display:flex;gap:4px;padding:10px 24px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);overflow-x:auto;scrollbar-width:none}
+.mode-tabs::-webkit-scrollbar{display:none}
+.mode-tab{padding:6px 14px;border-radius:10px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:.8rem;font-weight:500;font-family:var(--font);transition:all .25s;white-space:nowrap;letter-spacing:-.01em;position:relative}
 .mode-tab:hover{color:var(--text);background:var(--surface)}
-.mode-tab.active{background:var(--accent);color:#fff}
+.mode-tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 12px rgba(99,102,241,.3)}
 
 /* Messages */
-.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
-.msg{max-width:85%;padding:12px 16px;border-radius:var(--radius);line-height:1.6;font-size:.92rem;animation:fadeIn .3s ease}
-.msg-user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
-.msg-ai{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
-.msg-ai .correction{background:rgba(239,68,68,.1);border-left:3px solid var(--red);padding:8px 12px;margin:8px 0;border-radius:0 8px 8px 0;font-size:.85rem}
-.msg-ai .correct{background:rgba(16,185,129,.1);border-left:3px solid var(--green);padding:8px 12px;margin:8px 0;border-radius:0 8px 8px 0;font-size:.85rem}
-.msg-ai .vocab{background:rgba(99,102,241,.1);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;border-radius:0 8px 8px 0;font-size:.85rem}
-.msg-ai .ipa{color:var(--accent2);font-style:italic}
-.msg-ai .translation{color:var(--text2);font-size:.85rem}
-.msg-system{text-align:center;color:var(--text2);font-size:.8rem;padding:4px 0}
-.msg-welcome{text-align:center;padding:40px 20px;color:var(--text2)}
-.msg-welcome h2{font-size:1.8rem;margin-bottom:8px;color:var(--text)}
-.msg-welcome p{margin-bottom:6px}
-.msg-welcome .lang-flags{font-size:2.5rem;margin:16px 0;display:flex;gap:16px;justify-content:center}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.typing{display:flex;gap:4px;padding:12px 16px;align-self:flex-start}
-.typing span{width:8px;height:8px;border-radius:50%;background:var(--text2);animation:bounce .6s infinite alternate}
-.typing span:nth-child(2){animation-delay:.2s}
-.typing span:nth-child(3){animation-delay:.4s}
-@keyframes bounce{to{opacity:.3;transform:translateY(-4px)}}
+.messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:82%;padding:14px 18px;border-radius:var(--radius);line-height:1.65;font-size:.9rem;animation:fadeUp .35s cubic-bezier(.16,1,.3,1)}
+.msg-user{align-self:flex-end;background:var(--grad);color:#fff;border-bottom-right-radius:4px;box-shadow:0 4px 16px rgba(99,102,241,.25)}
+.msg-ai{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.msg-ai .correction{background:rgba(239,68,68,.08);border-left:3px solid var(--red);padding:10px 14px;margin:10px 0;border-radius:0 10px 10px 0;font-size:.84rem}
+.msg-ai .correct{background:rgba(16,185,129,.08);border-left:3px solid var(--green);padding:10px 14px;margin:10px 0;border-radius:0 10px 10px 0;font-size:.84rem}
+.msg-ai .vocab{background:rgba(99,102,241,.06);border-left:3px solid var(--accent);padding:10px 14px;margin:10px 0;border-radius:0 10px 10px 0;font-size:.84rem}
+.msg-ai .ipa{color:var(--accent2);font-family:var(--mono);font-size:.82rem}
+.msg-ai .translation{color:var(--text2);font-size:.83rem}
+.msg-system{text-align:center;color:var(--text2);font-size:.78rem;padding:4px 0;font-weight:500}
+.msg-welcome{text-align:center;padding:60px 20px;color:var(--text2)}
+.msg-welcome h2{font-size:2rem;margin-bottom:6px;color:var(--text);font-weight:800;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.msg-welcome .subtitle{font-size:1rem;color:var(--text2);margin-bottom:24px;font-weight:400}
+.msg-welcome .lang-flags{font-size:2.2rem;margin:20px 0;display:flex;gap:14px;justify-content:center}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.typing{display:flex;gap:5px;padding:14px 18px;align-self:flex-start;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:bounce .6s infinite alternate}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{to{opacity:.3;transform:translateY(-5px)}}
 
 /* Input */
-.input-area{padding:12px 20px;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0}
-.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-area{padding:14px 24px;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.input-row{display:flex;gap:10px;align-items:flex-end}
 .input-wrap{flex:1;position:relative}
-.input-wrap textarea{width:100%;padding:12px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.92rem;resize:none;outline:none;min-height:46px;max-height:120px;line-height:1.5;transition:border-color .2s}
-.input-wrap textarea:focus{border-color:var(--accent)}
+.input-wrap textarea{width:100%;padding:13px 18px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.9rem;resize:none;outline:none;min-height:48px;max-height:120px;line-height:1.5;transition:all .25s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.input-wrap textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
 .input-wrap textarea::placeholder{color:var(--text2)}
-.send-btn{width:46px;height:46px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
-.send-btn:hover{background:var(--accent2)}
-.send-btn:disabled{opacity:.5;cursor:not-allowed}
-.input-hint{font-size:.75rem;color:var(--text2);margin-top:6px;display:flex;gap:16px}
-.input-hint kbd{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:.7rem}
+.send-btn{width:48px;height:48px;border-radius:14px;border:none;background:var(--grad);color:#fff;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .25s;flex-shrink:0;box-shadow:0 4px 16px rgba(99,102,241,.3)}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,102,241,.4)}
+.send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.input-hint{font-size:.72rem;color:var(--text2);margin-top:8px;display:flex;gap:16px}
+.input-hint kbd{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:.68rem;font-family:var(--mono)}
 
 /* Sidebar */
 .sidebar-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.sidebar-header h3{font-size:.95rem;font-weight:600}
+.sidebar-header h3{font-size:.95rem;font-weight:600;letter-spacing:-.02em}
 .sidebar-content{flex:1;overflow-y:auto;padding:16px}
-.sidebar-section{margin-bottom:20px}
-.sidebar-section h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:10px;font-weight:600}
+.sidebar-section{margin-bottom:22px}
+.sidebar-section h4{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:10px;font-weight:600}
 
 /* Stats */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
-.stat-val{font-size:1.4rem;font-weight:700;color:var(--accent)}
-.stat-label{font-size:.72rem;color:var(--text2);margin-top:2px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all .2s}
+.stat-card:hover{border-color:rgba(99,102,241,.15);transform:translateY(-1px)}
+.stat-val{font-size:1.5rem;font-weight:700;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:.7rem;color:var(--text2);margin-top:3px;font-weight:500}
 
 /* Vocab List */
-.vocab-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .2s}
-.vocab-item:hover{border-color:var(--accent);background:var(--accent-glow)}
-.vocab-word{font-weight:600;font-size:.9rem}
-.vocab-meaning{font-size:.78rem;color:var(--text2)}
-.vocab-srs{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:600}
-.srs-new{background:rgba(99,102,241,.15);color:var(--accent2)}
-.srs-learning{background:rgba(245,158,11,.15);color:var(--yellow)}
-.srs-known{background:rgba(16,185,129,.15);color:var(--green)}
+.vocab-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;cursor:pointer;transition:all .25s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.vocab-item:hover{border-color:var(--accent);background:var(--accent-glow);transform:translateX(2px)}
+.vocab-word{font-weight:600;font-size:.88rem}
+.vocab-meaning{font-size:.76rem;color:var(--text2)}
+.vocab-ipa{font-family:var(--mono);font-size:.75rem;color:var(--accent2)}
+.vocab-srs{font-size:.62rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.srs-new{background:rgba(99,102,241,.12);color:var(--accent2)}
+.srs-learning{background:rgba(245,158,11,.12);color:var(--yellow)}
+.srs-known{background:rgba(16,185,129,.12);color:var(--green)}
 
 /* Grammar */
-.grammar-item{padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
-.grammar-rule{font-weight:600;font-size:.85rem;margin-bottom:4px}
-.grammar-ex{font-size:.8rem;color:var(--text2);font-style:italic}
+.grammar-item{padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.grammar-rule{font-weight:600;font-size:.84rem;margin-bottom:3px}
 
 /* Quick Actions */
 .quick-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.qa-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-size:.78rem;transition:all .2s}
-.qa-btn:hover{border-color:var(--accent);color:var(--accent)}
+.qa-btn{padding:7px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-size:.78rem;font-family:var(--font);font-weight:500;transition:all .25s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.qa-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);transform:translateY(-1px)}
 
-/* Dark/Light Toggle */
-.theme-toggle{position:relative}
-
-/* Responsive */
+/* Mobile */
 @media(max-width:768px){
-.sidebar{position:fixed;right:-340px;top:0;bottom:0;width:300px;z-index:100;transition:right .3s}
+.sidebar{position:fixed;right:-340px;top:0;bottom:0;width:300px;z-index:100;transition:right .3s cubic-bezier(.16,1,.3,1)}
 .sidebar.show{right:0}
-.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .sidebar-overlay.show{display:block}
 .lang-select{display:none}
-.lang-select-mobile{display:flex;gap:4px;padding:8px 20px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.lang-select-mobile{display:flex;gap:4px;padding:10px 24px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);scrollbar-width:none}
+.lang-select-mobile::-webkit-scrollbar{display:none}
 .msg{max-width:92%}
-.mode-tabs{overflow-x:auto}
+.msg-welcome{padding:30px 16px}
+.msg-welcome h2{font-size:1.5rem}
+.topbar{padding:10px 16px}
+.input-area{padding:10px 16px}
+.messages{padding:16px}
 }
 @media(min-width:769px){.lang-select-mobile{display:none}.sidebar-overlay{display:none!important}}
 
-/* Scrollbar for sidebar */
 .sidebar-content::-webkit-scrollbar{width:4px}
-.sidebar-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.sidebar-content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+@media(prefers-reduced-motion:reduce){.mesh-bg .blob,.particles span{animation:none!important}}
 </style>
 </head>
 <body>
+
+<!-- Mesh BG -->
+<div class="mesh-bg"><div class="blob"></div><div class="blob"></div><div class="blob"></div></div>
+<div class="particles"><span></span><span></span><span></span><span></span><span></span><span></span></div>
 
 <!-- Top Bar -->
 <div class="topbar">
@@ -138,6 +163,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     <button class="lang-btn" data-lang="ar">🇸🇦 AR</button>
     <button class="lang-btn" data-lang="zh">🇨🇳 ZH</button>
     <button class="lang-btn" data-lang="fr">🇫🇷 FR</button>
+    <button class="lang-btn" data-lang="id">🇮🇩 ID</button>
   </div>
   <div class="spacer"></div>
   <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
@@ -153,12 +179,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
   <button class="lang-btn" data-lang="ar">🇸🇦 Arabic</button>
   <button class="lang-btn" data-lang="zh">🇨🇳 Chinese</button>
   <button class="lang-btn" data-lang="fr">🇫🇷 French</button>
+  <button class="lang-btn" data-lang="id">🇮🇩 Indonesian</button>
 </div>
 
 <!-- Main Layout -->
 <div class="main">
   <div class="chat-area">
-    <!-- Mode Tabs -->
     <div class="mode-tabs">
       <button class="mode-tab active" data-mode="chat">💬 Free Chat</button>
       <button class="mode-tab" data-mode="grammar">📝 Grammar Fix</button>
@@ -167,14 +193,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
       <button class="mode-tab" data-mode="scenario">🎭 Scenarios</button>
     </div>
 
-    <!-- Messages -->
     <div class="messages" id="messages">
       <div class="msg-welcome">
         <h2>Welcome to MiMoLang</h2>
-        <div class="lang-flags">🇺🇸 🇯🇵 🇰🇷 🇸🇦 🇨🇳 🇫🇷</div>
-        <p>Chat with <strong>Xiaomi MiMo V2.5</strong> to practice any language</p>
-        <p>Get instant grammar corrections, pronunciation guides, and vocabulary building</p>
-        <div class="quick-actions" style="justify-content:center;margin-top:20px">
+        <p class="subtitle">AI Language Tutor powered by Xiaomi MiMo V2.5</p>
+        <div class="lang-flags">🇺🇸 🇯🇵 🇰🇷 🇸🇦 🇨🇳 🇫🇷 🇮🇩</div>
+        <p>Practice any language with instant grammar correction, pronunciation guides, and vocabulary building</p>
+        <div class="quick-actions" style="justify-content:center;margin-top:24px">
           <button class="qa-btn" onclick="quickStart('beginner')">🌱 I'm a beginner</button>
           <button class="qa-btn" onclick="quickStart('intermediate')">📈 Intermediate</button>
           <button class="qa-btn" onclick="quickStart('advanced')">🔥 Advanced</button>
@@ -183,7 +208,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
       </div>
     </div>
 
-    <!-- Input -->
     <div class="input-area">
       <div class="input-row">
         <div class="input-wrap">
@@ -202,45 +226,41 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <h3>📊 Learning Progress</h3>
+      <h3>📊 <span data-i="progress">Learning Progress</span></h3>
       <div class="spacer"></div>
       <button class="icon-btn" onclick="toggleSidebar()" style="width:28px;height:28px;font-size:.8rem">✕</button>
     </div>
     <div class="sidebar-content">
-      <!-- Stats -->
       <div class="sidebar-section">
-        <h4>Session Stats</h4>
+        <h4 data-i="sessionStats">Session Stats</h4>
         <div class="stat-grid">
-          <div class="stat-card"><div class="stat-val" id="statMsgs">0</div><div class="stat-label">Messages</div></div>
-          <div class="stat-card"><div class="stat-val" id="statCorrections">0</div><div class="stat-label">Corrections</div></div>
-          <div class="stat-card"><div class="stat-val" id="statVocab">0</div><div class="stat-label">New Words</div></div>
+          <div class="stat-card"><div class="stat-val" id="statMsgs">0</div><div class="stat-label" data-i="messages">Messages</div></div>
+          <div class="stat-card"><div class="stat-val" id="statCorrections">0</div><div class="stat-label" data-i="corrections">Corrections</div></div>
+          <div class="stat-card"><div class="stat-val" id="statVocab">0</div><div class="stat-label" data-i="newWords">New Words</div></div>
           <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-label">Streak 🔥</div></div>
         </div>
       </div>
 
-      <!-- Vocabulary SRS -->
       <div class="sidebar-section">
-        <h4>📚 Vocabulary (Spaced Repetition)</h4>
+        <h4>📚 <span data-i="vocabSRS">Vocabulary (Spaced Repetition)</span></h4>
         <div id="vocabList">
-          <p style="color:var(--text2);font-size:.82rem">Start chatting to collect vocabulary words automatically.</p>
+          <p style="color:var(--text2);font-size:.82rem" data-i="vocabHint">Start chatting to collect vocabulary words automatically.</p>
         </div>
       </div>
 
-      <!-- Grammar Notes -->
       <div class="sidebar-section">
-        <h4>📝 Grammar Notes</h4>
+        <h4>📝 <span data-i="grammarNotes">Grammar Notes</span></h4>
         <div id="grammarList">
-          <p style="color:var(--text2);font-size:.82rem">Grammar corrections will appear here.</p>
+          <p style="color:var(--text2);font-size:.82rem" data-i="grammarHint">Grammar corrections will appear here.</p>
         </div>
       </div>
 
-      <!-- Quick Actions -->
       <div class="sidebar-section">
-        <h4>⚡ Practice</h4>
+        <h4>⚡ <span data-i="practice">Practice</span></h4>
         <div class="quick-actions">
-          <button class="qa-btn" onclick="practiceVocab()">📖 Review Vocab</button>
-          <button class="qa-btn" onclick="startScenario()">🎭 Role Play</button>
-          <button class="qa-btn" onclick="exportProgress()">💾 Export</button>
+          <button class="qa-btn" onclick="practiceVocab()">📖 <span data-i="reviewVocab">Review Vocab</span></button>
+          <button class="qa-btn" onclick="startScenario()">🎭 <span data-i="rolePlay">Role Play</span></button>
+          <button class="qa-btn" onclick="exportProgress()">💾 <span data-i="export">Export</span></button>
         </div>
       </div>
     </div>
@@ -251,122 +271,86 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 <script>
 const MODEL = 'openai-fast';
 const API = 'https://text.pollinations.ai/openai';
-const LANG_NAMES = {en:'English',ja:'Japanese',ko:'Korean',ar:'Arabic',zh:'Chinese',fr:'French'};
-const LANG_FLAGS = {en:'🇺🇸',ja:'🇯🇵',ko:'🇰🇷',ar:'🇸🇦',zh:'🇨🇳',fr:'🇫🇷'};
+const LANG_NAMES = {en:'English',ja:'Japanese',ko:'Korean',ar:'Arabic',zh:'Chinese',fr:'French',id:'Indonesian'};
+const LANG_FLAGS = {en:'🇺🇸',ja:'🇯🇵',ko:'🇰🇷',ar:'🇸🇦',zh:'🇨🇳',fr:'🇫🇷',id:'🇮🇩'};
+
+// i18n
+const I18N = {
+  en:{progress:'Learning Progress',sessionStats:'Session Stats',messages:'Messages',corrections:'Corrections',newWords:'New Words',vocabSRS:'Vocabulary (Spaced Repetition)',vocabHint:'Start chatting to collect vocabulary words automatically.',grammarNotes:'Grammar Notes',grammarHint:'Grammar corrections will appear here.',practice:'Practice',reviewVocab:'Review Vocab',rolePlay:'Role Play',export:'Export',newConvo:'New conversation started.',switchLang:'Switched to',charCount:'chars',inputPh:'Type in English or your target language...'},
+  id:{progress:'Progres Belajar',sessionStats:'Statistik Sesi',messages:'Pesan',corrections:'Koreksi',newWords:'Kata Baru',vocabSRS:'Kosakata (Pengulangan Terjadwal)',vocabHint:'Mulai ngobrol untuk mengumpulkan kosakata secara otomatis.',grammarNotes:'Catatan Tata Bahasa',grammarHint:'Koreksi tata bahasa akan muncul di sini.',practice:'Latihan',reviewVocab:'Ulang Kosakata',rolePlay:'Bermain Peran',export:'Ekspor',newConvo:'Percakapan baru dimulai.',switchLang:'Beralih ke',charCount:'karakter',inputPh:'Ketik dalam bahasa Inggris atau bahasa targetmu...'}
+};
+
+function t(key){return(I18N[state.uiLang]&&I18N[state.uiLang][key])||(I18N.en[key]||key)}
+function applyI18n(){
+  document.querySelectorAll('[data-i]').forEach(el=>{const v=t(el.dataset.i);if(v)el.textContent=v});
+  const ph=t('inputPh');if(ph)document.getElementById('userInput').placeholder=ph;
+}
 
 let state = {
-  lang: 'en',
-  mode: 'chat',
-  messages: [],
-  vocab: JSON.parse(localStorage.getItem('mimolang_vocab')||'{}'),
-  grammar: [],
-  stats: { msgs:0, corrections:0, vocab:0, streak: parseInt(localStorage.getItem('mimolang_streak')||'0') },
-  sidebar: false
+  lang:'en', uiLang:localStorage.getItem('mimolang_uilang')||'en', mode:'chat',
+  messages:[], vocab:JSON.parse(localStorage.getItem('mimolang_vocab')||'{}'),
+  grammar:[], stats:{msgs:0,corrections:0,vocab:0,streak:parseInt(localStorage.getItem('mimolang_streak')||'0')},
+  sidebar:false
 };
 
 // Theme
 const html = document.documentElement;
-function initTheme(){
-  const saved = localStorage.getItem('mimolang_theme')||'dark';
-  html.dataset.theme = saved;
-  document.getElementById('themeBtn').textContent = saved==='dark'?'🌙':'☀️';
-}
+function initTheme(){const s=localStorage.getItem('mimolang_theme')||'dark';html.dataset.theme=s;document.getElementById('themeBtn').textContent=s==='dark'?'🌙':'☀️'}
 initTheme();
+document.getElementById('themeBtn').onclick=()=>{const t=html.dataset.theme==='dark'?'light':'dark';html.dataset.theme=t;localStorage.setItem('mimolang_theme',t);document.getElementById('themeBtn').textContent=t==='dark'?'🌙':'☀️'};
 
-document.getElementById('themeBtn').onclick = ()=>{
-  const t = html.dataset.theme==='dark'?'light':'dark';
-  html.dataset.theme = t;
-  localStorage.setItem('mimolang_theme',t);
-  document.getElementById('themeBtn').textContent = t==='dark'?'🌙':'☀️';
-};
+// UI Language toggle (EN ↔ ID on double-click logo area)
+function setUILang(lang){
+  state.uiLang=lang;localStorage.setItem('mimolang_uilang',lang);applyI18n();
+}
 
 // Language selection
 document.querySelectorAll('.lang-btn').forEach(btn=>{
-  btn.onclick = ()=>{
+  btn.onclick=()=>{
     document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll(`.lang-btn[data-lang="${btn.dataset.lang}"]`).forEach(b=>b.classList.add('active'));
-    state.lang = btn.dataset.lang;
-    document.getElementById('userInput').placeholder = `Type in ${LANG_NAMES[state.lang]} or English...`;
-    addSystem(`Switched to ${LANG_FLAGS[state.lang]} ${LANG_NAMES[state.lang]}`);
+    state.lang=btn.dataset.lang;
+    document.getElementById('userInput').placeholder=`Type in ${LANG_NAMES[state.lang]} or English...`;
+    // If target is Indonesian, also switch UI
+    if(state.lang==='id') setUILang('id');
+    else if(state.uiLang==='id'&&state.lang!=='id') setUILang('en');
+    addSystem(`${t('switchLang')} ${LANG_FLAGS[state.lang]} ${LANG_NAMES[state.lang]}`);
   };
 });
 
 // Mode tabs
 document.querySelectorAll('.mode-tab').forEach(tab=>{
-  tab.onclick = ()=>{
+  tab.onclick=()=>{
     document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    state.mode = tab.dataset.mode;
-    const hints = {
-      chat: `Chat freely in ${LANG_NAMES[state.lang]}. I'll correct mistakes and teach new words.`,
-      grammar: 'Paste a sentence and I\'ll fix grammar + explain the rule.',
-      pronunciation: 'Type a word or phrase to get IPA transcription and tips.',
-      vocab: 'Ask me to teach vocabulary on any topic.',
-      scenario: 'I\'ll set up a real-life scenario for you to practice.'
-    };
+    tab.classList.add('active');state.mode=tab.dataset.mode;
+    const hints={chat:`Chat freely in ${LANG_NAMES[state.lang]}. I'll correct mistakes and teach new words.`,grammar:'Paste a sentence and I\'ll fix grammar + explain the rule.',pronunciation:'Type a word or phrase to get IPA transcription and tips.',vocab:'Ask me to teach vocabulary on any topic.',scenario:'I\'ll set up a real-life scenario for you to practice.'};
     addSystem(hints[state.mode]);
   };
 });
 
-// Sidebar
-function toggleSidebar(){
-  state.sidebar = !state.sidebar;
-  document.getElementById('sidebar').classList.toggle('show',state.sidebar);
-  document.getElementById('sidebarOverlay').classList.toggle('show',state.sidebar);
-  document.getElementById('sidebarBtn').classList.toggle('active',state.sidebar);
-}
-document.getElementById('sidebarBtn').onclick = toggleSidebar;
+function toggleSidebar(){state.sidebar=!state.sidebar;document.getElementById('sidebar').classList.toggle('show',state.sidebar);document.getElementById('sidebarOverlay').classList.toggle('show',state.sidebar);document.getElementById('sidebarBtn').classList.toggle('active',state.sidebar)}
+document.getElementById('sidebarBtn').onclick=toggleSidebar;
 
-// Clear
-document.getElementById('clearBtn').onclick = ()=>{
-  state.messages = [];
-  state.grammar = [];
-  document.getElementById('messages').innerHTML = '';
-  addSystem('New conversation started.');
-};
+document.getElementById('clearBtn').onclick=()=>{state.messages=[];state.grammar=[];document.getElementById('messages').innerHTML='';addSystem(t('newConvo'))};
 
-// Input
-const input = document.getElementById('userInput');
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
-input.addEventListener('input',()=>{document.getElementById('charCount').textContent=input.value.length+' chars';});
-function handleKey(e){
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
-}
+const input=document.getElementById('userInput');
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+input.addEventListener('input',()=>{document.getElementById('charCount').textContent=input.value.length+' '+t('charCount')});
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
 
-// Messages
 function addMsg(text,role){
-  const el = document.createElement('div');
-  el.className = `msg msg-${role}`;
-  el.innerHTML = text;
-  document.getElementById('messages').appendChild(el);
-  el.scrollIntoView({behavior:'smooth'});
-  if(role==='user') state.stats.msgs++;
-  updateStats();
+  const el=document.createElement('div');el.className=`msg msg-${role}`;el.innerHTML=text;
+  document.getElementById('messages').appendChild(el);el.scrollIntoView({behavior:'smooth'});
+  if(role==='user')state.stats.msgs++;updateStats();
 }
+function addSystem(text){const el=document.createElement('div');el.className='msg-system';el.textContent=text;document.getElementById('messages').appendChild(el);el.scrollIntoView({behavior:'smooth'})}
+function showTyping(){const el=document.createElement('div');el.className='typing';el.id='typing';el.innerHTML='<span></span><span></span><span></span>';document.getElementById('messages').appendChild(el);el.scrollIntoView({behavior:'smooth'})}
+function hideTyping(){const t=document.getElementById('typing');if(t)t.remove()}
 
-function addSystem(text){
-  const el = document.createElement('div');
-  el.className = 'msg-system';
-  el.textContent = text;
-  document.getElementById('messages').appendChild(el);
-  el.scrollIntoView({behavior:'smooth'});
-}
-
-function showTyping(){
-  const el = document.createElement('div');
-  el.className = 'typing';
-  el.id = 'typing';
-  el.innerHTML = '<span></span><span></span><span></span>';
-  document.getElementById('messages').appendChild(el);
-  el.scrollIntoView({behavior:'smooth'});
-}
-function hideTyping(){const t=document.getElementById('typing');if(t)t.remove();}
-
-// System prompt builder
 function getSystemPrompt(){
-  const lang = LANG_NAMES[state.lang];
-  const modePrompts = {
-    chat: `You are MiMoLang, a friendly and encouraging ${lang} language tutor powered by Xiaomi MiMo V2.5. The user wants to practice ${lang}.
+  const lang=LANG_NAMES[state.lang];
+  const modePrompts={
+    chat:`You are MiMoLang, a friendly and encouraging ${lang} language tutor powered by Xiaomi MiMo V2.5. The user wants to practice ${lang}.
 
 RULES:
 - Reply in a mix of ${lang} and English (adjust ratio based on user level)
@@ -385,7 +369,7 @@ Format corrections like this:
 Format new vocabulary:
 📝 [word] /IPA/ — [meaning] | Example: "[example sentence]"`,
 
-    grammar: `You are MiMoLang, a ${lang} grammar expert. When the user sends text:
+    grammar:`You are MiMoLang, a ${lang} grammar expert. When the user sends text:
 1. Identify ALL grammar errors
 2. Show corrected version
 3. Explain each rule clearly
@@ -394,7 +378,7 @@ Format new vocabulary:
 
 Be encouraging. Show progress over time.`,
 
-    pronunciation: `You are MiMoLang, a ${lang} pronunciation coach. When the user sends a word or phrase:
+    pronunciation:`You are MiMoLang, a ${lang} pronunciation coach. When the user sends a word or phrase:
 1. Give full IPA transcription
 2. Break down syllables with stress marks
 3. Explain mouth position for tricky sounds
@@ -408,7 +392,7 @@ Format:
 👅 Sound tips: [position descriptions]
 ⚠️ Common mistake: [what to avoid]`,
 
-    vocab: `You are MiMoLang, a ${lang} vocabulary builder. Teach vocabulary by topic:
+    vocab:`You are MiMoLang, a ${lang} vocabulary builder. Teach vocabulary by topic:
 1. Give 5-8 words with IPA, meaning, example sentence
 2. Group by theme (food, travel, emotions, business, etc.)
 3. Include collocations and common phrases
@@ -422,7 +406,7 @@ Format each word:
 🔗 Collocations: [common word pairs]
 🧠 Memory trick: [mnemonic]`,
 
-    scenario: `You are MiMoLang, a ${lang} conversation partner. Create an immersive role-play scenario:
+    scenario:`You are MiMoLang, a ${lang} conversation partner. Create an immersive role-play scenario:
 1. Set the scene (café, airport, job interview, shopping, etc.)
 2. Play the other character (waiter, interviewer, shopkeeper)
 3. Guide the conversation naturally
@@ -432,247 +416,50 @@ Format each word:
 
 Start by asking what scenario they want, then begin the role-play. Stay in character but break character briefly to teach when needed.`
   };
-
-  return `You are MiMoLang, an AI language tutor by Xiaomi MiMo V2.5. Target language: ${lang}.
-
-${modePrompts[state.mode]}
-
-IMPORTANT:
-- Keep responses concise (under 300 words)
-- Use emojis for visual clarity
-- Be warm, encouraging, patient
-- If user writes in their native language, help translate
-- Track what the user struggles with and review it
-- Never be condescending — celebrate every attempt`;
+  return `You are MiMoLang, an AI language tutor by Xiaomi MiMo V2.5. Target language: ${lang}.\n\n${modePrompts[state.mode]}\n\nIMPORTANT:\n- Keep responses concise (under 300 words)\n- Use emojis for visual clarity\n- Be warm, encouraging, patient\n- If user writes in their native language, help translate\n- Track what the user struggles with and review it\n- Never be condescending — celebrate every attempt`;
 }
 
-// Send message
 async function sendMessage(){
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = '';
-  input.style.height = 'auto';
-  document.getElementById('charCount').textContent = '0 chars';
-
-  addMsg(text,'user');
-  state.messages.push({role:'user',content:text});
-
-  // Extract vocab from user message
-  extractVocab(text);
-
-  showTyping();
-  document.getElementById('sendBtn').disabled = true;
-
+  const text=input.value.trim();if(!text)return;
+  input.value='';input.style.height='auto';
+  document.getElementById('charCount').textContent='0 '+t('charCount');
+  addMsg(text,'user');state.messages.push({role:'user',content:text});
+  showTyping();document.getElementById('sendBtn').disabled=true;
   try{
-    const payload = {
-      model: MODEL,
-      messages: [
-        {role:'system',content:getSystemPrompt()},
-        ...state.messages.slice(-20)
-      ],
-      stream: false
-    };
-
-    const res = await fetch(API,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not process that. Please try again.';
-
-    hideTyping();
-    addMsg(formatReply(reply),'ai');
-    state.messages.push({role:'assistant',content:reply});
-
-    // Extract corrections & vocab from reply
-    extractCorrections(reply);
-    extractVocabFromReply(reply);
-    saveVocab();
-
-  }catch(e){
-    hideTyping();
-    addMsg('⚠️ Connection error. Please try again.','ai');
-    console.error(e);
-  }
-
-  document.getElementById('sendBtn').disabled = false;
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:getSystemPrompt()},...state.messages.slice(-20)],stream:false}),signal:AbortSignal.timeout(60000)});
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||'Sorry, I could not process that. Please try again.';
+    hideTyping();addMsg(formatReply(reply),'ai');state.messages.push({role:'assistant',content:reply});
+    extractCorrections(reply);extractVocabFromReply(reply);saveVocab();
+  }catch(e){hideTyping();addMsg('⚠️ Connection error. Please try again.','ai');console.error(e)}
+  document.getElementById('sendBtn').disabled=false;
 }
 
-// Format reply with color-coded sections
 function formatReply(text){
-  // Corrections
-  text = text.replace(/❌\s*"([^"]+)"\s*→\s*✅\s*"([^"]+)"/g,
-    '<div class="correction">❌ <s>$1</s> → ✅ <strong>$2</strong></div>');
-  // Vocabulary blocks
-  text = text.replace(/📝\s*(.+?)\s*\/(.+?)\/\s*—\s*(.+)/g,
-    '<div class="vocab">📝 <strong>$1</strong> <span class="ipa">/$2/</span> — $3</div>');
-  // IPA inline
-  text = text.replace(/\/([^/]+)\//g,'<span class="ipa">/$1/</span>');
-  // Correct blocks
-  text = text.replace(/✅\s*(.+)/g,'<div class="correct">✅ $1</div>');
-  // Translation arrows
-  text = text.replace(/"(.+?)"\s*→\s*"(.+?)"/g,'"$1" <span class="translation">→</span> "$2"');
-  // Newlines
-  text = text.replace(/\n/g,'<br>');
-  return text;
+  text=text.replace(/❌\s*"([^"]+)"\s*→\s*✅\s*"([^"]+)"/g,'<div class="correction">❌ <s>$1</s> → ✅ <strong>$2</strong></div>');
+  text=text.replace(/📝\s*(.+?)\s*\/(.+?)\/\s*—\s*(.+)/g,'<div class="vocab">📝 <strong>$1</strong> <span class="ipa">/$2/</span> — $3</div>');
+  text=text.replace(/\/([^/]+)\//g,'<span class="ipa">/$1/</span>');
+  text=text.replace(/✅\s*(.+)/g,'<div class="correct">✅ $1</div>');
+  text=text.replace(/"(.+?)"\s*→\s*"(.+?)"/g,'"$1" <span class="translation">→</span> "$2"');
+  text=text.replace(/\n/g,'<br>');return text;
 }
 
-// Extract corrections
-function extractCorrections(text){
-  const corrs = text.matchAll(/❌\s*"([^"]+)"\s*→\s*✅\s*"([^"]+)"/g);
-  let count = 0;
-  for(const m of corrs){
-    count++;
-    state.grammar.push({original:m[1],corrected:m[2]});
-  }
-  if(count){
-    state.stats.corrections += count;
-    updateGrammarList();
-  }
-}
+function extractCorrections(text){const cs=text.matchAll(/❌\s*"([^"]+)"\s*→\s*✅\s*"([^"]+)"/g);let c=0;for(const m of cs){c++;state.grammar.push({original:m[1],corrected:m[2]})}if(c){state.stats.corrections+=c;updateGrammarList()}}
+function extractVocabFromReply(text){const ms=text.matchAll(/📝\s*(.+?)\s*\/(.+?)\/\s*—\s*(.+?)(?:\n|$|<)/g);let c=0;for(const m of ms){const w=m[1].trim();if(!state.vocab[w]){state.vocab[w]={ipa:m[2],meaning:m[3].trim(),srs:'new',nextReview:Date.now(),interval:1};c++}}if(c){state.stats.vocab+=c;updateVocabList()}}
+function saveVocab(){localStorage.setItem('mimolang_vocab',JSON.stringify(state.vocab));localStorage.setItem('mimolang_streak',state.stats.streak.toString())}
 
-// Extract vocab
-function extractVocabFromReply(text){
-  const vocabMatches = text.matchAll(/📝\s*(.+?)\s*\/(.+?)\/\s*—\s*(.+?)(?:\n|$|<)/g);
-  let count = 0;
-  for(const m of vocabMatches){
-    const word = m[1].trim();
-    if(!state.vocab[word]){
-      state.vocab[word] = {ipa:m[2],meaning:m[3].trim(),srs:'new',nextReview:Date.now(),interval:1};
-      count++;
-    }
-  }
-  if(count){
-    state.stats.vocab += count;
-    updateVocabList();
-  }
-}
+function updateStats(){document.getElementById('statMsgs').textContent=state.stats.msgs;document.getElementById('statCorrections').textContent=state.stats.corrections;document.getElementById('statVocab').textContent=Object.keys(state.vocab).length;document.getElementById('statStreak').textContent=state.stats.streak}
+function updateVocabList(){const el=document.getElementById('vocabList');const entries=Object.entries(state.vocab).slice(-15).reverse();if(!entries.length)return;el.innerHTML=entries.map(([w,v])=>`<div class="vocab-item" onclick="pronounce('${w}')"><div style="flex:1"><div class="vocab-word">${w}</div><div class="vocab-ipa">/${v.ipa}/</div><div class="vocab-meaning">${v.meaning}</div></div><span class="vocab-srs srs-${v.srs}">${v.srs}</span></div>`).join('')}
+function updateGrammarList(){const el=document.getElementById('grammarList');const items=state.grammar.slice(-5).reverse();el.innerHTML=items.map(g=>`<div class="grammar-item"><div class="grammar-rule">❌ <s>${g.original}</s> → ✅ ${g.corrected}</div></div>`).join('')}
 
-// Simple vocab extraction from user messages
-function extractVocab(text){
-  const words = text.match(/[\p{L}]{4,}/gu);
-  if(words){
-    words.forEach(w=>{
-      const lower = w.toLowerCase();
-      if(!state.vocab[lower] && !['this','that','with','from','have','been','will','would','could','should','about','their','there','where','which','what','when'].includes(lower)){
-        // Don't auto-add common words
-      }
-    });
-  }
-}
+function quickStart(level){const p={beginner:`Hi! I'm a beginner in ${LANG_NAMES[state.lang]}. Can you start with basic greetings and simple phrases? Teach me 5 essential phrases with pronunciation.`,intermediate:`I know some ${LANG_NAMES[state.lang]} already. Can we have a conversation and you correct my mistakes? Start with a question about my day.`,advanced:`I want to practice advanced ${LANG_NAMES[state.lang]}. Let's discuss a topic like culture, technology, or current events. Challenge me with complex sentences.`,conversation:`Let's just chat in ${LANG_NAMES[state.lang]}! Ask me something interesting and help me practice naturally.`};input.value=p[level];sendMessage()}
 
-// SRS
-function updateSRS(word,correct){
-  const v = state.vocab[word];
-  if(!v) return;
-  if(correct){
-    v.interval = Math.min(v.interval * 2.5, 30);
-    v.srs = v.interval >= 7 ? 'known' : 'learning';
-  } else {
-    v.interval = 1;
-    v.srs = 'learning';
-  }
-  v.nextReview = Date.now() + v.interval * 86400000;
-  saveVocab();
-}
+function practiceVocab(){const words=Object.keys(state.vocab);if(!words.length){addSystem('No vocabulary to review yet. Start chatting first!');return}const sample=words.sort(()=>Math.random()-.5).slice(0,5);input.value=`Quiz me on these words: ${sample.join(', ')}. Give me fill-in-the-blank exercises.`;sendMessage()}
+function startScenario(){input.value=`Let's do a role-play scenario in ${LANG_NAMES[state.lang]}. Set up a realistic situation (café, shopping, travel) and play the other character. Correct my mistakes as we go.`;sendMessage()}
+function exportProgress(){const data={language:LANG_NAMES[state.lang],stats:state.stats,vocabulary:state.vocab,corrections:state.grammar,exported:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`mimolang-${state.lang}-progress.json`;a.click();addSystem('Progress exported!')}
+function pronounce(word){if('speechSynthesis' in window){const lm={en:'en-US',ja:'ja-JP',ko:'ko-KR',ar:'ar-SA',zh:'zh-CN',fr:'fr-FR',id:'id-ID'};const u=new SpeechSynthesisUtterance(word);u.lang=lm[state.lang]||'en-US';u.rate=.8;speechSynthesis.speak(u)}}
 
-function saveVocab(){
-  localStorage.setItem('mimolang_vocab',JSON.stringify(state.vocab));
-  localStorage.setItem('mimolang_streak',state.stats.streak.toString());
-}
-
-// Update sidebar
-function updateStats(){
-  document.getElementById('statMsgs').textContent = state.stats.msgs;
-  document.getElementById('statCorrections').textContent = state.stats.corrections;
-  document.getElementById('statVocab').textContent = Object.keys(state.vocab).length;
-  document.getElementById('statStreak').textContent = state.stats.streak;
-}
-
-function updateVocabList(){
-  const el = document.getElementById('vocabList');
-  const entries = Object.entries(state.vocab).slice(-15).reverse();
-  if(!entries.length) return;
-  el.innerHTML = entries.map(([word,v])=>`
-    <div class="vocab-item" onclick="pronounce('${word}')">
-      <div style="flex:1">
-        <div class="vocab-word">${word} <span style="font-size:.75rem;color:var(--text2)">/${v.ipa}/</span></div>
-        <div class="vocab-meaning">${v.meaning}</div>
-      </div>
-      <span class="vocab-srs srs-${v.srs}">${v.srs}</span>
-    </div>
-  `).join('');
-}
-
-function updateGrammarList(){
-  const el = document.getElementById('grammarList');
-  const items = state.grammar.slice(-5).reverse();
-  el.innerHTML = items.map(g=>`
-    <div class="grammar-item">
-      <div class="grammar-rule">❌ <s>${g.original}</s> → ✅ ${g.corrected}</div>
-    </div>
-  `).join('');
-}
-
-// Quick starts
-function quickStart(level){
-  const prompts = {
-    beginner: `Hi! I'm a beginner in ${LANG_NAMES[state.lang]}. Can you start with basic greetings and simple phrases? Teach me 5 essential phrases with pronunciation.`,
-    intermediate: `I know some ${LANG_NAMES[state.lang]} already. Can we have a conversation and you correct my mistakes? Start with a question about my day.`,
-    advanced: `I want to practice advanced ${LANG_NAMES[state.lang]}. Let's discuss a topic like culture, technology, or current events. Challenge me with complex sentences.`,
-    conversation: `Let's just chat in ${LANG_NAMES[state.lang]}! Ask me something interesting and help me practice naturally.`
-  };
-  input.value = prompts[level];
-  sendMessage();
-}
-
-// Quick actions
-function practiceVocab(){
-  const words = Object.keys(state.vocab);
-  if(!words.length){addSystem('No vocabulary to review yet. Start chatting first!');return;}
-  const sample = words.sort(()=>Math.random()-.5).slice(0,5);
-  input.value = `Quiz me on these words: ${sample.join(', ')}. Give me fill-in-the-blank exercises.`;
-  sendMessage();
-}
-
-function startScenario(){
-  input.value = `Let's do a role-play scenario in ${LANG_NAMES[state.lang]}. Set up a realistic situation (café, shopping, travel) and play the other character. Correct my mistakes as we go.`;
-  sendMessage();
-}
-
-function exportProgress(){
-  const data = {
-    language: LANG_NAMES[state.lang],
-    stats: state.stats,
-    vocabulary: state.vocab,
-    corrections: state.grammar,
-    exported: new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `mimolang-${state.lang}-progress.json`;
-  a.click();
-  addSystem('Progress exported!');
-}
-
-// Pronunciation via Web Speech API
-function pronounce(word){
-  if('speechSynthesis' in window){
-    const langMap = {en:'en-US',ja:'ja-JP',ko:'ko-KR',ar:'ar-SA',zh:'zh-CN',fr:'fr-FR'};
-    const u = new SpeechSynthesisUtterance(word);
-    u.lang = langMap[state.lang]||'en-US';
-    u.rate = 0.8;
-    speechSynthesis.speak(u);
-  }
-}
-
-// Init
-updateStats();
-updateVocabList();
-updateGrammarList();
+updateStats();updateVocabList();updateGrammarList();applyI18n();
 </script>
 </body>
 </html>
